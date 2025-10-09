@@ -1,8 +1,24 @@
 use clap::Parser;
-use color_eyre::eyre::Result;
+//use color_eyre::eyre::Result;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read};
 use std::path::Path;
+use regex::Regex;
+use lazy_static::lazy_static;
+
+lazy_static! {
+        static ref header_columns: Regex = Regex::new(
+            r"^#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT(\t\w+)+$"
+        )
+        .expect("invalid regex");
+        static ref vcf_line: Regex = Regex::new(
+            r"^\w+\t\d+\t.+\t.+\t.+\t.+\t(.+)\t(.+)\t(.+)(\t.+)+$"
+        )
+        .expect("invalid regex");
+
+    }
+
+
 
 /// validvcf: A fast and simple VCF validator.
 ///
@@ -56,6 +72,42 @@ where
     Ok(BufReader::new(inner))
 }
 
+fn validate_vcf_cols_header(line: &str) -> Result<usize, String> {
+    match header_columns.captures(&line) {
+        Some(caps) => {
+            // `caps.get(0)` is the whole match; groups start at index 1.
+            // Here we have a single capturing group that itself contains
+            // several tab‑separated tokens.  We'll split that group on tabs
+            // to obtain each individual token.
+            let group = caps.get(1).unwrap().as_str();
+
+            // Split on '\t' and filter out the trailing empty element
+            // caused by the final tab in the source string.
+            let samples: Vec<&str> = group
+                .split('\t')
+                .filter(|s| !s.is_empty())
+                .collect();
+
+            println!("  ✅ matches");
+            //println!("  whole match:   {:?}", caps.get(0).unwrap().as_str());
+            //println!("  captured group: {:?}", group);
+            //println!("  sub‑tokens:     {:?}", samples);
+            Result::Ok(samples.len())
+        }
+        None => {
+            Result::Err(format!("Incorrect VCF column header line\n{}", line))
+        },
+    }
+}
+fn validate_vcf_line(line: &str) -> Result<usize, String> {
+    match vcf_line.captures(&line) {
+        Some(caps) => {Ok(0)}
+        None => {
+            Err(format!("Incorrect VCF line\n{}", line))
+        }
+    }
+}
+
 
 fn validate_vcf(vcf_path: &str) -> i32 {
     use std::path::Path;
@@ -76,9 +128,11 @@ fn validate_vcf(vcf_path: &str) -> i32 {
 
     let mut is_header = true;
     let mut header: Vec<String> = Vec::new();
+    let mut n_samples = 0;
 
     // `lines()` yields an iterator of `Result<String, io::Error>`.
     for (idx, line_res) in reader.lines().enumerate() {
+
         let line = match line_res {
             Ok(line) => {
                 // Do whatever you need with each line.
@@ -94,12 +148,21 @@ fn validate_vcf(vcf_path: &str) -> i32 {
             if line.starts_with("##") {
                 // Collecting header for futher analysis
                 header.push(line);
+                continue;
             } else {
                 println!("Found header {}", line);
                 is_header = false;
-                return 0
+                n_samples = validate_vcf_cols_header(&line).unwrap();
+                continue;
             }
-        }
+        };
+        match validate_vcf_line(&line) {
+            Ok(_) => {continue},
+            Err(e) => {
+                eprintln!("Error reading line {}: {}", idx + 1, e);
+                return 1;
+            }
+        };
 
     }
 
@@ -108,8 +171,8 @@ fn validate_vcf(vcf_path: &str) -> i32 {
 }
 
 
-fn main() -> Result<()> {
-    color_eyre::install()?;
+fn main() {
+    //color_eyre::install()?;
     let cli = Cli::parse();
 
     // Placeholder logic: just report the provided path

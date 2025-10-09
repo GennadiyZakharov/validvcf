@@ -50,7 +50,7 @@ fn missed_info() {
         .arg("--quiet")
         .arg(test_vcf)
         .assert()
-        .success();
+        .failure();
 }
 
 #[test]
