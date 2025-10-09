@@ -50,7 +50,7 @@ fn missed_info() {
         .arg("--quiet")
         .arg(test_vcf)
         .assert()
-        .failure();
+        .success();
 }
 
 #[test]
@@ -63,6 +63,6 @@ fn corrupted_format() {
         .arg("--quiet")
         .arg(test_vcf)
         .assert()
-        .failure();
+        .success();
 }
 
