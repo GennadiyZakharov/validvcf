@@ -1,5 +1,6 @@
 use assert_cmd::prelude::*;
 use std::process::Command;
+use validvcf::error_codes::VcfErrorCode;
 
 #[test]
 fn valid_vcf() {
@@ -37,7 +38,8 @@ fn non_exist_vcf() {
         .arg("--quiet")
         .arg(test_vcf)
         .assert()
-        .failure();
+        .failure()
+        .code(VcfErrorCode::FileNotFound.error_code());
 }
 
 #[test]
@@ -63,7 +65,8 @@ fn corrupted_format() {
         .arg("--quiet")
         .arg(test_vcf)
         .assert()
-        .failure();
+        .failure()
+        .code(VcfErrorCode::EmptyFormatEntry.error_code());
 }
 
 #[test]
@@ -76,11 +79,12 @@ fn corrupted_sample() {
         .arg("--quiet")
         .arg(test_vcf)
         .assert()
-        .failure();
+        .failure()
+        .code(VcfErrorCode::EmptySampleEntry.error_code());
 }
 
 #[test]
-fn corrupted_sample_entries_number() {
+fn corrupted_sample_entries() {
     // Path to a known test VCF in the repository
     let test_vcf = "test_vcf/HG001_corrupted_sample.vcf.gz";
 
@@ -89,20 +93,8 @@ fn corrupted_sample_entries_number() {
         .arg("--quiet")
         .arg(test_vcf)
         .assert()
-        .failure();
-}
-
-#[test]
-fn empty_format() {
-    // Path to a known test VCF in the repository
-    let test_vcf = "test_vcf/HG001_empty_format.vcf.gz";
-
-    Command::cargo_bin("validvcf")
-        .expect("binary should build")
-        .arg("--quiet")
-        .arg(test_vcf)
-        .assert()
-        .failure();
+        .failure()
+        .code(VcfErrorCode::EmptySampleEntry.error_code());
 }
 
 #[test]

@@ -1,9 +1,10 @@
 mod vcf_validate;
 mod maybe_gz_reader;
+mod error_codes;
 
 use clap::Parser;
 use std::io::{BufRead};
-
+use crate::error_codes::VcfErrorCode;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -24,6 +25,10 @@ struct Cli {
 ///   and read at least one line of text. Returns 1 if gzip fails to open/decompress.
 /// - If the file is uncompressed, attempts to read at least one line of text.
 
+fn report_error(e: VcfErrorCode) -> i32 {
+    eprintln!("Error: {}", e.error_message());
+    e as i32
+}
 
 
 fn validate_vcf(vcf_path: &str) -> i32 {
@@ -31,15 +36,13 @@ fn validate_vcf(vcf_path: &str) -> i32 {
 
     let path = Path::new(vcf_path);
     if ! path.exists() {
-        eprintln!("Error: Input file '{}' does not exist", vcf_path);
-        return 1;
+        return report_error(VcfErrorCode::FileNotFound)
     }
 
     let reader = match maybe_gz_reader::open_maybe_gzipped(path) {
         Ok(f) => f,
         Err(e) => {
-            eprintln!("Error: Failed to open file '{}': {}", vcf_path, e);
-            return 1;
+            return report_error(VcfErrorCode::FileReadError);
         }
     };
 
@@ -56,8 +59,8 @@ fn validate_vcf(vcf_path: &str) -> i32 {
                 line
             }
             Err(e) => {
-                eprintln!("Error reading line {}: {}", idx + 1, e);
-                return 1;
+                eprintln!("Error reading line {}", idx + 1);
+                return report_error(VcfErrorCode::FileReadError);
             }
         };
 
@@ -69,15 +72,19 @@ fn validate_vcf(vcf_path: &str) -> i32 {
             } else {
                 println!("Found header {}", line);
                 is_header = false;
-                n_samples = vcf_validate::validate_vcf_cols_header(&line).unwrap();
+                match vcf_validate::validate_vcf_cols_header(&line) {
+                    Ok(samples) => n_samples = samples,
+                    Err(e) => {
+                        return report_error(e);
+                    }
+                };
                 continue;
             }
         };
         match vcf_validate::validate_vcf_line(&line, n_samples) {
             Ok(_) => {continue},
             Err(e) => {
-                eprintln!("Error reading line {}: {}", idx + 1, e);
-                return 1;
+                return report_error(e);
             }
         };
 

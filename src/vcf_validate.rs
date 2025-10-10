@@ -1,5 +1,6 @@
 use regex::Regex;
 use lazy_static::lazy_static;
+use crate::error_codes::VcfErrorCode;
 
 const N_FIXED_FIELDS: usize = 9;
 
@@ -15,8 +16,7 @@ lazy_static! {
 
 }
 
-
-pub fn validate_vcf_cols_header(line: &str) -> Result<usize, String> {
+pub fn validate_vcf_cols_header(line: &str) -> Result<usize, VcfErrorCode> {
     match header_columns.captures(&line) {
         Some(caps) => {
             // `caps.get(0)` is the whole match; groups start at index 1.
@@ -39,22 +39,22 @@ pub fn validate_vcf_cols_header(line: &str) -> Result<usize, String> {
             Ok(samples.len())
         }
         None => {
-            Err(format!("Incorrect VCF column header line\n{}", line))
+            Err(VcfErrorCode::IncorrectHeader)
         },
     }
 }
 
-fn validate_vcf_info(info_str: &str) -> Result<usize, String> {
+fn validate_vcf_info(info_str: &str) -> Result<usize, VcfErrorCode> {
     // Check that FORMAT is not empty
     if info_str.is_empty() {
-        return Err("INFO field cannot be empty".to_string());
+        return Err(VcfErrorCode::EmptyVcfEntry);
     };
     // Splitting FORMAT by ':'
     let fields: Vec<&str> = info_str.split(';').collect();
 
     // Checking for empty fields
     if fields.iter().any(|&field| field.is_empty()) {
-        return Err(format!("Empty subfield found in INFO: {}", info_str));
+        return Err(VcfErrorCode::EmptyInfoEntry);
     };
     for field in fields {
         let _code = validate_vcf_format_entry(field)?;
@@ -62,52 +62,52 @@ fn validate_vcf_info(info_str: &str) -> Result<usize, String> {
     Ok(0)
 }
 
-fn validate_vcf_format_entry(entry_str: &str) -> Result<usize, String> {
+fn validate_vcf_format_entry(entry_str: &str) -> Result<usize, VcfErrorCode> {
     let fields: Vec<&str> = entry_str.split('=').collect();
     if fields.len() != 2 {
-        return Err(format!("Incorrectly formatted INFO entry: {}", entry_str));
+        return Err(VcfErrorCode::IncorrectInfoEntry);
     };
     Ok(0)
 }
 
-fn validate_vcf_format(format_str: &str) -> Result<usize, String> {
+fn validate_vcf_format(format_str: &str) -> Result<usize, VcfErrorCode> {
     // Check that FORMAT is not empty
     if format_str.is_empty() {
-        return Err("FORMAT field cannot be empty".to_string());
+        return Err(VcfErrorCode::EmptyVcfEntry);
     }
     // Splitting FORMAT by ':'
     let fields: Vec<&str> = format_str.split(':').collect();
 
     // Checking for empty fields
     if fields.iter().any(|&field| field.is_empty()) {
-        return Err(format!("Empty subfield found in FORMAT: {}", format_str));
+        return Err(VcfErrorCode::EmptyFormatEntry);
     }
     Ok(fields.len())
 }
 
-fn validate_vcf_sample(sample_str: &str, n_format_entries:usize) -> Result<usize, String> {
+fn validate_vcf_sample(sample_str: &str, n_format_entries:usize) -> Result<usize, VcfErrorCode> {
     // Check that FORMAT is not empty
     if sample_str.is_empty() {
-        return Err("Sample field cannot be empty".to_string());
+        return Err(VcfErrorCode::EmptyVcfEntry);
     }
     // Splitting entries by ':'
     let fields: Vec<&str> = sample_str.split(':').collect();
 
     // Checking for empty fields
     if fields.iter().any(|&field| field.is_empty()) {
-        return Err(format!("Empty subfield found in SAMPLE: {}", sample_str));
+        return Err(VcfErrorCode::EmptySampleEntry);
     }
     if fields.len() != n_format_entries {
-        return Err(format!("Incorrect number of FORMAT entries in sample: {}", sample_str));
+        return Err(VcfErrorCode::IncorrectSampleEntriesNumber);
     }
     Ok(0)
 }
 
 
-pub fn validate_vcf_line(line: &str, n_samples:usize) -> Result<usize, String> {
+pub fn validate_vcf_line(line: &str, n_samples:usize) -> Result<usize, VcfErrorCode> {
     let fields: Vec<&str> = line.split("\t").collect();
     if fields.len() != N_FIXED_FIELDS + n_samples {
-        return Err(format!("Incorrect number of fields in VCF line\n{}", line));
+        return Err(VcfErrorCode::IncorrectEntriesNumber);
     };
     let info = fields[7];
     let format = fields[8];
