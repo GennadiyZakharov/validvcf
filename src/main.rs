@@ -2,8 +2,7 @@ mod vcf_validate;
 mod maybe_gz_reader;
 
 use clap::Parser;
-use std::io::{BufRead, Read};
-use std::path::Path;
+use std::io::{BufRead};
 
 
 #[derive(Parser, Debug)]
@@ -74,7 +73,7 @@ fn validate_vcf(vcf_path: &str) -> i32 {
                 continue;
             }
         };
-        match vcf_validate::validate_vcf_line(&line) {
+        match vcf_validate::validate_vcf_line(&line, n_samples) {
             Ok(_) => {continue},
             Err(e) => {
                 eprintln!("Error reading line {}: {}", idx + 1, e);

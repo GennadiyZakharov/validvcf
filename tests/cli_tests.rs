@@ -43,7 +43,7 @@ fn non_exist_vcf() {
 #[test]
 fn missed_info() {
     // Path to a known test VCF in the repository
-    let test_vcf = "test_vcf/HG001_missed_info.vcf";
+    let test_vcf = "test_vcf/HG001_missed_info.vcf.gz";
 
     Command::cargo_bin("validvcf")
         .expect("binary should build")
@@ -56,13 +56,64 @@ fn missed_info() {
 #[test]
 fn corrupted_format() {
     // Path to a known test VCF in the repository
-    let test_vcf = "test_vcf/HG001_corrupted_format.vcf";
+    let test_vcf = "test_vcf/HG001_corrupted_format.vcf.gz";
 
     Command::cargo_bin("validvcf")
         .expect("binary should build")
         .arg("--quiet")
         .arg(test_vcf)
         .assert()
-        .success();
+        .failure();
 }
 
+#[test]
+fn corrupted_sample() {
+    // Path to a known test VCF in the repository
+    let test_vcf = "test_vcf/HG001_corrupted_sample.vcf.gz";
+
+    Command::cargo_bin("validvcf")
+        .expect("binary should build")
+        .arg("--quiet")
+        .arg(test_vcf)
+        .assert()
+        .failure();
+}
+
+#[test]
+fn corrupted_sample_entries_number() {
+    // Path to a known test VCF in the repository
+    let test_vcf = "test_vcf/HG001_corrupted_sample.vcf.gz";
+
+    Command::cargo_bin("validvcf")
+        .expect("binary should build")
+        .arg("--quiet")
+        .arg(test_vcf)
+        .assert()
+        .failure();
+}
+
+#[test]
+fn empty_format() {
+    // Path to a known test VCF in the repository
+    let test_vcf = "test_vcf/HG001_empty_format.vcf.gz";
+
+    Command::cargo_bin("validvcf")
+        .expect("binary should build")
+        .arg("--quiet")
+        .arg(test_vcf)
+        .assert()
+        .failure();
+}
+
+#[test]
+fn incorrect_format() {
+    // Path to a known test VCF in the repository
+    let test_vcf = "test_vcf/HG001_incorrect_info.vcf.gz";
+
+    Command::cargo_bin("validvcf")
+        .expect("binary should build")
+        .arg("--quiet")
+        .arg(test_vcf)
+        .assert()
+        .failure();
+}
