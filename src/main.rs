@@ -27,7 +27,7 @@ struct Cli {
 
 fn report_error(e: VcfErrorCode) -> i32 {
     eprintln!("Error: {}", e.error_message());
-    e as i32
+    e.error_code()
 }
 
 
@@ -36,13 +36,13 @@ fn validate_vcf(vcf_path: &str) -> i32 {
 
     let path = Path::new(vcf_path);
     if ! path.exists() {
-        return report_error(VcfErrorCode::FileNotFound)
+        return report_error(VcfErrorCode::FileNotFound(vcf_path.to_string()))
     }
 
     let reader = match maybe_gz_reader::open_maybe_gzipped(path) {
         Ok(f) => f,
         Err(e) => {
-            return report_error(VcfErrorCode::FileReadError);
+            return report_error(VcfErrorCode::FileReadError(e.to_string()));
         }
     };
 
@@ -60,7 +60,7 @@ fn validate_vcf(vcf_path: &str) -> i32 {
             }
             Err(e) => {
                 eprintln!("Error reading line {}", idx + 1);
-                return report_error(VcfErrorCode::FileReadError);
+                return report_error(VcfErrorCode::FileReadError(e.to_string()));
             }
         };
 

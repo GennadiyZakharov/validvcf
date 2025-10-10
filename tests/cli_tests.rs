@@ -39,7 +39,7 @@ fn non_exist_vcf() {
         .arg(test_vcf)
         .assert()
         .failure()
-        .code(VcfErrorCode::FileNotFound.error_code());
+        .code(VcfErrorCode::FileNotFound("non_existing_file.vcf.gz".to_string()).error_code());
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn corrupted_format() {
         .arg(test_vcf)
         .assert()
         .failure()
-        .code(VcfErrorCode::EmptyFormatEntry.error_code());
+        .code(VcfErrorCode::EmptyFormatEntry("".to_string()).error_code());
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn corrupted_sample() {
         .arg(test_vcf)
         .assert()
         .failure()
-        .code(VcfErrorCode::EmptySampleEntry.error_code());
+        .code(VcfErrorCode::EmptySampleEntry("".to_string()).error_code());
 }
 
 #[test]
@@ -94,7 +94,7 @@ fn corrupted_sample_entries() {
         .arg(test_vcf)
         .assert()
         .failure()
-        .code(VcfErrorCode::EmptySampleEntry.error_code());
+        .code(VcfErrorCode::EmptySampleEntry("".to_string()).error_code());
 }
 
 #[test]

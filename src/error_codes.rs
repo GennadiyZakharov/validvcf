@@ -1,33 +1,44 @@
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub enum VcfErrorCode {
-    FileNotFound = 1,
-    FileReadError = 2,
-    IncorrectHeader =3 ,
-    IncorrectEntriesNumber =4,
-    EmptyVcfEntry =5,
-    EmptyInfoEntry =6,
-    IncorrectInfoEntry = 7,
-    EmptyFormatEntry = 8,
-    EmptySampleEntry = 9,
-    IncorrectSampleEntriesNumber = 10,
+    FileNotFound(String),
+    FileReadError(String),
+    IncorrectHeader(String),
+    IncorrectEntriesNumber(String),
+    EmptyVcfEntry(String),
+    EmptyInfoEntry(String),
+    IncorrectInfoEntry(String),
+    EmptyFormatEntry(String),
+    EmptySampleEntry(String),
+    IncorrectSampleEntriesNumber(String),
 }
 
 impl VcfErrorCode {
-    pub fn error_message(&self) -> &str {
+    pub fn error_message(&self) -> String {
         match self {
-            VcfErrorCode::FileNotFound => "File not found",
-            VcfErrorCode::FileReadError => "Cannot read file",
-            VcfErrorCode::IncorrectEntriesNumber => "Incorrect number of entries",
-            VcfErrorCode::IncorrectHeader => "Incorrect VCF column header line",
-            VcfErrorCode::EmptyVcfEntry => "Empty VCF entry",
-            VcfErrorCode::EmptyInfoEntry => "Empty INFO entry",
-            VcfErrorCode::IncorrectInfoEntry => "Incorrectly formatted INFO entry",
-            VcfErrorCode::EmptyFormatEntry => "Empty INFO entry",
-            VcfErrorCode::EmptySampleEntry => "Empty SAMPLE entry",
-            VcfErrorCode::IncorrectSampleEntriesNumber => "Incorrect number of FORMAT entries",
+            VcfErrorCode::FileNotFound(filename) => format!("File not found: {}", filename),
+            VcfErrorCode::FileReadError(filename) => format!("Cannot read file {}", filename),
+            VcfErrorCode::IncorrectEntriesNumber(line) => format!("Incorrect number of entries: {}", line),
+            VcfErrorCode::IncorrectHeader(line) => format!("Incorrect VCF column header line: {}", line),
+            VcfErrorCode::EmptyVcfEntry(entry) => format!("Empty VCF entry: {}", entry),
+            VcfErrorCode::EmptyInfoEntry(entry) => format!("Empty INFO entry: {}", entry),
+            VcfErrorCode::IncorrectInfoEntry(entry) => format!("Incorrectly formatted INFO entry: {}", entry),
+            VcfErrorCode::EmptyFormatEntry(entry) => format!("Empty INFO entry: {}", entry),
+            VcfErrorCode::EmptySampleEntry(entry) => format!("Empty SAMPLE entry: {}", entry),
+            VcfErrorCode::IncorrectSampleEntriesNumber(entry) => format!("Incorrect number of FORMAT entries: {}", entry),
         }
     }
     pub fn error_code(&self) -> i32 {
-       *self as i32
+        match self {
+            VcfErrorCode::FileNotFound(_) => 1,
+            VcfErrorCode::FileReadError(_) => 2,
+            VcfErrorCode::IncorrectHeader(_) => 3,
+            VcfErrorCode::IncorrectEntriesNumber(_) => 4,
+            VcfErrorCode::EmptyVcfEntry(_) => 5,
+            VcfErrorCode::EmptyInfoEntry(_) => 6,
+            VcfErrorCode::IncorrectInfoEntry(_) => 7,
+            VcfErrorCode::EmptyFormatEntry(_) => 8,
+            VcfErrorCode::EmptySampleEntry(_) => 9,
+            VcfErrorCode::IncorrectSampleEntriesNumber(_) => 10,
+        }
     }
 }
