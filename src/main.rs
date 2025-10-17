@@ -51,30 +51,31 @@ fn validate_vcf(vcf_path: &str) -> i32 {
     let mut n_samples = 0;
 
     // `lines()` yields an iterator of `Result<String, io::Error>`.
-    for (idx, line_res) in reader.lines().enumerate() {
-
+    for (line_number, line_res) in reader.lines().enumerate() {
         let line = match line_res {
             Ok(line) => {
                 // Do whatever you need with each line.
                 line
             }
             Err(e) => {
-                eprintln!("Error reading line {}", idx + 1);
+                eprintln!("I/O error on reading line {}", line_number + 1);
                 return report_error(VcfErrorCode::FileReadError(e.to_string()));
             }
         };
 
         if is_header {
             if line.starts_with("##") {
-                // Collecting header for futher analysis
+                // Collecting header for further analysis
                 header.push(line);
                 continue;
             } else {
-                println!("Found header {}", line);
+                println!("Found header at line {}", line_number + 1);
                 is_header = false;
                 match vcf_validate::validate_vcf_cols_header(&line) {
                     Ok(samples) => n_samples = samples,
                     Err(e) => {
+                        eprintln!("Error validating line {}", line_number + 1);
+                        eprintln!("    {}", line);
                         return report_error(e);
                     }
                 };
@@ -84,6 +85,8 @@ fn validate_vcf(vcf_path: &str) -> i32 {
         match vcf_validate::validate_vcf_line(&line, n_samples) {
             Ok(_) => {continue},
             Err(e) => {
+                eprintln!("Error validating line {}", line_number + 1);
+                eprintln!("    {}", line);
                 return report_error(e);
             }
         };

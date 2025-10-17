@@ -31,11 +31,6 @@ pub fn validate_vcf_cols_header(line: &str) -> Result<usize, VcfErrorCode> {
                 .split('\t')
                 .filter(|s| !s.is_empty())
                 .collect();
-
-            println!("  ✅ matches");
-            //println!("  whole match:   {:?}", caps.get(0).unwrap().as_str());
-            //println!("  captured group: {:?}", group);
-            //println!("  sub‑tokens:     {:?}", samples);
             Ok(samples.len())
         }
         None => {
