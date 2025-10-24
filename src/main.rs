@@ -37,7 +37,7 @@ fn validate_vcf(vcf_path: &str) -> VcfErrorCode {
     let reader = match maybe_gz_reader::open_maybe_gzipped(path) {
         Ok(f) => f,
         Err(e) => {
-            return VcfErrorCode::FileReadError(e.to_string());
+            return VcfErrorCode::FileReadError(vcf_path.to_string(), e.to_string());
         }
     };
 
@@ -54,7 +54,7 @@ fn validate_vcf(vcf_path: &str) -> VcfErrorCode {
             }
             Err(e) => {
                 eprintln!("I/O error on reading line {}", line_number + 1);
-                return VcfErrorCode::FileReadError(e.to_string());
+                return VcfErrorCode::FileReadError(vcf_path.to_string(), e.to_string());
             }
         };
 

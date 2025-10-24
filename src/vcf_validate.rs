@@ -9,11 +9,6 @@ lazy_static! {
         r"^#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT(\t\w+)+$"
     )
     .expect("invalid regex");
-    static ref vcf_line: Regex = Regex::new(
-        r"^\w+\t\d+\t.+\t.+\t.+\t.+\t(.+)\t(.+)\t(.+)(\t.+)+$"
-    )
-    .expect("invalid regex");
-
 }
 
 pub fn validate_vcf_cols_header(line: &str) -> Result<usize, VcfErrorCode> {
