@@ -43,16 +43,30 @@ fn non_exist_vcf() {
 }
 
 #[test]
-fn missed_info() {
+fn missed_info_empty() {
     // Path to a known test VCF in the repository
-    let test_vcf = "test_vcf/HG001_missed_info.vcf.gz";
+    let test_vcf = "test_vcf/HG001_missed_info_empty.vcf";
 
     Command::cargo_bin("validvcf")
         .expect("binary should build")
         .arg("--quiet")
         .arg(test_vcf)
         .assert()
-        .failure();
+        .failure()
+        .code(VcfErrorCode::EmptyVcfEntry("".to_string()).error_code());
+}
+
+#[test]
+fn missed_info_point() {
+    // Path to a known test VCF in the repository
+    let test_vcf = "test_vcf/HG001_missed_info_point.vcf";
+
+    Command::cargo_bin("validvcf")
+        .expect("binary should build")
+        .arg("--quiet")
+        .arg(test_vcf)
+        .assert()
+        .success();
 }
 
 #[test]

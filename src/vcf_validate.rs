@@ -35,14 +35,19 @@ pub fn validate_vcf_cols_header(line: &str) -> Result<usize, VcfErrorCode> {
 }
 
 fn validate_vcf_info(info_str: &str) -> Result<usize, VcfErrorCode> {
-    // Check that FORMAT is not empty
+    // Check that INFO is not empty string
     if info_str.is_empty() {
         return Err(VcfErrorCode::EmptyVcfEntry(info_str.to_string()));
     };
-    // Splitting FORMAT by ':'
+    // Allow a missing/empty INFO field represented by a single dot per VCF spec
+    if info_str == "." {
+        return Ok(0);
+    }
+
+    // Split INFO by ';'
     let fields: Vec<&str> = info_str.split(';').collect();
 
-    // Checking for empty fields
+    // Checking for empty fields like consecutive semicolons 'A;;B'
     if fields.iter().any(|&field| field.is_empty()) {
         return Err(VcfErrorCode::EmptyInfoEntry(info_str.to_string()));
     };

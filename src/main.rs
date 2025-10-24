@@ -64,7 +64,6 @@ fn validate_vcf(vcf_path: &str) -> VcfErrorCode {
                 header.push(line);
                 continue;
             } else {
-                println!("Found header at line {}", line_number + 1);
                 is_header = false;
                 match vcf_validate::validate_vcf_cols_header(&line) {
                     Ok(samples) => n_samples = samples,
