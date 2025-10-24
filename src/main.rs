@@ -25,24 +25,19 @@ struct Cli {
 ///   and read at least one line of text. Returns 1 if gzip fails to open/decompress.
 /// - If the file is uncompressed, attempts to read at least one line of text.
 
-fn report_error(e: VcfErrorCode) -> i32 {
-    eprintln!("Error: {}", e.error_message());
-    e.error_code()
-}
 
-
-fn validate_vcf(vcf_path: &str) -> i32 {
+fn validate_vcf(vcf_path: &str) -> VcfErrorCode {
     use std::path::Path;
 
     let path = Path::new(vcf_path);
     if ! path.exists() {
-        return report_error(VcfErrorCode::FileNotFound(vcf_path.to_string()))
+        return VcfErrorCode::FileNotFound(vcf_path.to_string());
     }
 
     let reader = match maybe_gz_reader::open_maybe_gzipped(path) {
         Ok(f) => f,
         Err(e) => {
-            return report_error(VcfErrorCode::FileReadError(e.to_string()));
+            return VcfErrorCode::FileReadError(e.to_string());
         }
     };
 
@@ -59,7 +54,7 @@ fn validate_vcf(vcf_path: &str) -> i32 {
             }
             Err(e) => {
                 eprintln!("I/O error on reading line {}", line_number + 1);
-                return report_error(VcfErrorCode::FileReadError(e.to_string()));
+                return VcfErrorCode::FileReadError(e.to_string());
             }
         };
 
@@ -76,7 +71,7 @@ fn validate_vcf(vcf_path: &str) -> i32 {
                     Err(e) => {
                         eprintln!("Error validating line {}", line_number + 1);
                         eprintln!("    {}", line);
-                        return report_error(e);
+                        return e;
                     }
                 };
                 continue;
@@ -87,14 +82,12 @@ fn validate_vcf(vcf_path: &str) -> i32 {
             Err(e) => {
                 eprintln!("Error validating line {}", line_number + 1);
                 eprintln!("    {}", line);
-                return report_error(e);
+                return e;
             }
         };
 
     }
-
-    0
-
+    VcfErrorCode::Ok
 }
 
 
@@ -108,13 +101,12 @@ fn main() {
     }
     let valid_status = validate_vcf(&cli.input);
 
-    if !cli.quiet {
-        if valid_status == 0 {
-            println!("Validating VCF: {} → OK", cli.input);
-        } else {
+    match valid_status {
+        VcfErrorCode::Ok => println!("Validating VCF: {} → OK", cli.input),
+        _ => {
             println!("Validating VCF: {} → INVALID", cli.input);
+            println!("{}", valid_status.error_message());
         }
     }
-
-    std::process::exit(valid_status);
+    std::process::exit(valid_status.error_code());
 }

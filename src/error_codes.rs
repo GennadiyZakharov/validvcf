@@ -1,5 +1,6 @@
 #[derive(Clone)]
 pub enum VcfErrorCode {
+    Ok,
     FileNotFound(String),
     FileReadError(String),
     IncorrectHeader(String),
@@ -15,6 +16,7 @@ pub enum VcfErrorCode {
 impl VcfErrorCode {
     pub fn error_message(&self) -> String {
         match self {
+            VcfErrorCode::Ok => "OK".to_string(),
             VcfErrorCode::FileNotFound(filename) => format!("File not found: {}", filename),
             VcfErrorCode::FileReadError(filename) => format!("Cannot read file {}", filename),
             VcfErrorCode::IncorrectEntriesNumber(line) => format!("Incorrect number of entries: {}", line),
@@ -29,6 +31,7 @@ impl VcfErrorCode {
     }
     pub fn error_code(&self) -> i32 {
         match self {
+            VcfErrorCode::Ok => 0,
             VcfErrorCode::FileNotFound(_) => 1,
             VcfErrorCode::FileReadError(_) => 2,
             VcfErrorCode::IncorrectHeader(_) => 3,
